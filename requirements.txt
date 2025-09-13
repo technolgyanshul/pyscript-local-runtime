@@ -1,0 +1,14 @@
+# This project uses Pyodide to run Python in the browser.
+# The Python dependencies are not managed through a standard requirements.txt file.
+# Instead, they are part of the Pyodide environment bundled with the project.
+# This file is for documentation purposes.
+
+# Core Pyodide modules used in main.py:
+# - pyodide.ffi
+# - pyodide.http
+
+# The `runtime` directory contains the Pyodide distribution and bundled packages.
+
+# The Pyodide files are managed by the scripts in the runtime directory.
+# Specifically, runtime/setup.sh and runtime/setup.py contain the logic to download the necessary files from the Pyodide CDN.
+# To re-download or update these files, you can run the setup.sh script: bash runtime/setup.sh
