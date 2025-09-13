@@ -64,13 +64,11 @@ async def generate_docs(e):
             descriptions = []
             for tab in tabs:
                 try:
-                    prompt = "Provide a one-sentence summary of the provided web page."
+                    # Correctly place the URL in the prompt and use the urlContext tool
+                    prompt = f"Provide a one-sentence summary of the webpage at this URL: {tab.url}"
                     
-                    # Corrected tool name to `googleSearchRetrieval` for the v1 API
                     tools = [{
-                        "googleSearchRetrieval": {
-                            "uris": [tab.url]
-                        }
+                        "urlContext": {}
                     }]
 
                     model = "gemini-2.5-flash"
