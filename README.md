@@ -64,3 +64,19 @@ I'd also be delighted if you wanted to:
 
 <a href="https://www.buymeacoffee.com/pfython" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/arial-yellow.png" alt="Buy Me A Coffee" width="217px" ></a>
 
+### **Troubleshooting and FAQ**
+
+*   **I'm getting a Git error about "divergent branches" when I try to `pull` or `push`.**
+    *   This is a common Git issue that happens when both your local branch and the remote branch have changes that the other doesn't. To fix this, you need to tell Git how to combine them. The easiest way is to run `git config pull.rebase false` once, and then run `git pull`. This will merge the remote changes into your local branch.
+
+*   **The "Export Tabs" button isn't working.**
+    *   This is likely because the extension doesn't have the necessary permissions. Open the `manifest.json` file and make sure the `"permissions"` key includes `"tabs"`, like this:
+        ```json
+        "permissions": [
+          "tabs"
+        ],
+        ```
+    *   After adding the permission, you'll need to reload the extension in `chrome://extensions`.
+
+*   **The extension popup is blank or something looks broken.**
+    *   The best way to debug a Chrome extension is to right-click the extension's icon in your toolbar and select "Inspect popup". This will open the Chrome Developer Tools, where you can see error messages in the "Console" tab. This will show you any Python or JavaScript errors that are happening.

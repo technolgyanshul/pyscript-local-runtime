@@ -6,6 +6,9 @@ from js import chrome, document, Blob, URL, Object
 def display_tabs(tabs):
     tab_list_div = document.getElementById("tab-list")
     
+    # Clear any existing tabs in the list
+    tab_list_div.innerHTML = ""
+
     for tab in tabs:
         checkbox = document.createElement("input")
         checkbox.type = "checkbox"
@@ -23,6 +26,11 @@ def display_tabs(tabs):
         tab_list_div.appendChild(container)
 
 def export_selected_tabs(e):
+    # Remove any existing download link
+    existing_link = document.getElementById("download-link")
+    if existing_link:
+        document.body.removeChild(existing_link)
+
     selected_tabs_data = []
     checkboxes = document.querySelectorAll("#tab-list input[type='checkbox']")
     
@@ -53,11 +61,10 @@ def export_selected_tabs(e):
         download_link = document.createElement("a")
         download_link.href = url
         download_link.download = "selected_tabs.json"
-        download_link.textContent = "Download JSON"
+        download_link.textContent = "Click here to download your JSON file"
+        download_link.id = "download-link"
         
         document.body.appendChild(download_link)
-        download_link.click()
-        document.body.removeChild(download_link)
 
     chrome.tabs.query({}, create_proxy(get_tabs_for_export))
 
