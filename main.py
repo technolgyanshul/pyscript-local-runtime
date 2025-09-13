@@ -3,38 +3,63 @@ import json
 from pyodide.ffi import create_proxy
 from js import chrome, document, Blob, URL, Object
 
-def get_tabs_data(tabs):
-    tabs_data = []
+def display_tabs(tabs):
+    tab_list_div = document.getElementById("tab-list")
+    
     for tab in tabs:
-        tabs_data.append({
-            "title": tab.title,
-            "url": tab.url,
-            "id": tab.id,
-            "active": tab.active,
-            "windowId": tab.windowId
-        })
-    
-    json_data = json.dumps(tabs_data, indent=4)
-    
-    # Create a Blob from the JSON data
-    blob = Blob.new([json_data], {"type": "application/json"})
-    
-    # Create a URL for the Blob
-    url = URL.createObjectURL(blob)
-    
-    # Create a download link
-    download_link = document.createElement("a")
-    download_link.href = url
-    download_link.download = "tabs.json"
-    download_link.textContent = "Download JSON"
-    
-    # Add the link to the document
-    document.body.appendChild(download_link)
-    download_link.click()
-    document.body.removeChild(download_link)
+        checkbox = document.createElement("input")
+        checkbox.type = "checkbox"
+        checkbox.id = f"tab-{tab.id}"
+        checkbox.value = tab.id
+        checkbox.checked = True
+        
+        label = document.createElement("label")
+        label.setAttribute("for", f"tab-{tab.id}")
+        label.textContent = tab.title
+        
+        container = document.createElement("div")
+        container.appendChild(checkbox)
+        container.appendChild(label)
+        tab_list_div.appendChild(container)
 
+def export_selected_tabs(e):
+    selected_tabs_data = []
+    checkboxes = document.querySelectorAll("#tab-list input[type='checkbox']")
+    
+    selected_tab_ids = []
+    for checkbox in checkboxes:
+        if checkbox.checked:
+            selected_tab_ids.append(int(checkbox.value))
+    
+    def get_tabs_for_export(tabs):
+        for tab in tabs:
+            if tab.id in selected_tab_ids:
+                selected_tabs_data.append({
+                    "title": tab.title,
+                    "url": tab.url,
+                    "id": tab.id,
+                    "active": tab.active,
+                    "windowId": tab.windowId
+                })
+        
+        if not selected_tabs_data:
+            return
+        
+        json_data = json.dumps(selected_tabs_data, indent=4)
+        
+        blob = Blob.new([json_data], {"type": "application/json"})
+        url = URL.createObjectURL(blob)
+        
+        download_link = document.createElement("a")
+        download_link.href = url
+        download_link.download = "selected_tabs.json"
+        download_link.textContent = "Download JSON"
+        
+        document.body.appendChild(download_link)
+        download_link.click()
+        document.body.removeChild(download_link)
 
-def export_tabs(e):
-    chrome.tabs.query({}, create_proxy(get_tabs_data))
+    chrome.tabs.query({}, create_proxy(get_tabs_for_export))
 
-document.getElementById("export-btn").addEventListener("click", create_proxy(export_tabs))
+chrome.tabs.query({}, create_proxy(display_tabs))
+document.getElementById("export-btn").addEventListener("click", create_proxy(export_selected_tabs))
