@@ -7,21 +7,16 @@ from js import chrome, document
 
 def display_tabs(tabs):
     tab_list_div = document.getElementById("tab-list")
-    
-    # Clear any existing tabs in the list
     tab_list_div.innerHTML = ""
-
     for tab in tabs:
         checkbox = document.createElement("input")
         checkbox.type = "checkbox"
         checkbox.id = f"tab-{tab.id}"
         checkbox.value = tab.id
         checkbox.checked = True
-        
         label = document.createElement("label")
         label.setAttribute("for", f"tab-{tab.id}")
         label.textContent = tab.title
-        
         container = document.createElement("div")
         container.appendChild(checkbox)
         container.appendChild(label)
@@ -30,29 +25,16 @@ def display_tabs(tabs):
 def export_selected_tabs(e):
     selected_tabs_data = []
     checkboxes = document.querySelectorAll("#tab-list input[type='checkbox']")
-    
-    selected_tab_ids = []
-    for checkbox in checkboxes:
-        if checkbox.checked:
-            selected_tab_ids.append(int(checkbox.value))
-    
+    selected_tab_ids = [int(cb.value) for cb in checkboxes if cb.checked]
+
     def get_tabs_for_export(tabs):
         for tab in tabs:
             if tab.id in selected_tab_ids:
                 selected_tabs_data.append({
                     "title": tab.title,
-                    "url": tab.url,
-                    "id": tab.id,
-                    "active": tab.active,
-                    "windowId": tab.windowId
+                    "url": tab.url
                 })
-        
-        if not selected_tabs_data:
-            document.getElementById("json-output").value = ""
-            return
-        
-        json_data = json.dumps(selected_tabs_data, indent=4)
-        document.getElementById("json-output").value = json_data
+        document.getElementById("json-output").value = json.dumps(selected_tabs_data, indent=4)
 
     chrome.tabs.query({}, create_proxy(get_tabs_for_export))
 
@@ -62,39 +44,61 @@ async def generate_docs(e):
         document.getElementById("docs-output").value = "Please enter your Gemini API key."
         return
 
-    document.getElementById("docs-output").value = "Generating descriptions..."
+    document.getElementById("docs-output").value = "Generating descriptions using URL context..."
+
+    json_schema = {
+        "type": "OBJECT",
+        "properties": {
+            "summary": {"type": "STRING"}
+        },
+        "required": ["summary"]
+    }
+    
+    generation_config = {
+        "response_mime_type": "application/json",
+        "response_schema": json_schema
+    }
 
     def get_tabs_for_docs(tabs):
         async def fetch_descriptions():
             descriptions = []
             for tab in tabs:
                 try:
-                    prompt = f"What is the main purpose of the website at this URL: {tab.url}? Provide a one-sentence summary."
-                    # Using gemini-pro model as a fallback
-                    model = "gemini-pro"
+                    # The prompt is a general instruction, and the URL is provided in the tool.
+                    prompt = "Provide a one-sentence summary of the provided web page."
+                    
+                    tools = [{
+                        "google_search_retriever": {
+                            "uris": [tab.url]
+                        }
+                    }]
+
+                    model = "gemini-2.5-flash"
                     response = await pyfetch(
                         url=f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}",
                         method="POST",
                         headers={"Content-Type": "application/json"},
                         body=json.dumps({
-                            "contents": [{
-                                "parts": [{
-                                    "text": prompt
-                                }]
-                            }]
+                            "contents": [{"parts": [{"text": prompt}]}],
+                            "tools": tools,
+                            "generationConfig": generation_config
                         })
                     )
+
                     data = await response.json()
                     
-                    if 'error' in data:
-                        error_message = data['error'].get('message', 'Unknown error')
+                    if response.status != 200 or 'error' in data:
+                        error_message = data.get('error', {}).get('message', f'HTTP {response.status}')
                         descriptions.append(f"{tab.title}: Error - {error_message}")
                         continue
 
-                    generated_text = data['candidates'][0]['content']['parts'][0]['text']
-                    descriptions.append(f"{tab.title}: {generated_text.strip()}")
-                except Exception as e:
-                    descriptions.append(f"{tab.title}: Error generating description - {e}")
+                    generated_content = data['candidates'][0]['content']['parts'][0]['text']
+                    response_json = json.loads(generated_content)
+                    summary = response_json.get("summary", "No summary found in response.")
+                    descriptions.append(f"{tab.title}: {summary.strip()}")
+
+                except Exception as err:
+                    descriptions.append(f"{tab.title}: Error processing request - {str(err)}")
             
             document.getElementById("docs-output").value = "\n\n".join(descriptions)
 
