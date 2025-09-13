@@ -34,8 +34,11 @@
     <hr>
     <h2>Generate Website Descriptions</h2>
     <div id="gemini-container">
-        <label for="gemini-api-key">Enter your Gemini API Key:</label>
-        <input type="text" id="gemini-api-key" placeholder="Your API Key">
+        <div id="api-key-container">
+            <label for="gemini-api-key">Enter your Gemini API Key:</label>
+            <input type="text" id="gemini-api-key" placeholder="Your API Key">
+        </div>
+        <button id="change-api-key-btn" style="display: none;">Change API Key</button>
         <button id="generate-docs-btn">Generate Descriptions</button>
         <label for="docs-output">Generated Descriptions:</label>
         <textarea id="docs-output" readonly></textarea>
