@@ -18,6 +18,7 @@
   <body>
     <h2>Hello World!</h2>
     <h4 id="datetime"></h4>
+    <button id="export-btn">Export Tabs</button>
 <!-- Python code below is intentionally left-aligned to utilise full width  -->
 <py-script>
 from js import document as popup  # DOM for this popup page
@@ -30,6 +31,7 @@ print("This is the current date and time in ISO8601 format, courtesy of Python a
 insert_content = popup.getElementById('datetime')
 insert_content.innerHTML = f"<i>{datetime.now().isoformat()}</i>"
 </py-script>
+<py-script src="main.py"></py-script>
 <py-repl>
 text = "This is a REPL session.<br>"
 text += "You can add several lines of Python<br>"
@@ -38,4 +40,3 @@ print(text.upper())
 </py-repl>
   </body>
 </html>
-

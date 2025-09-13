@@ -13,6 +13,9 @@
     "default_popup": "popup.html",
     "default_icon": "icons/icon-128.png"
   },
+  "permissions": [
+    "tabs"
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   }
