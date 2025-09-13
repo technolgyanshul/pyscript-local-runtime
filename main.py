@@ -90,6 +90,7 @@ async def generate_docs(e):
 
     document.getElementById("docs-output").value = "Generating descriptions..."
     
+    # This JSON schema is correct for forcing a JSON output.
     json_schema = {"type": "OBJECT", "properties": {"summary": {"type": "STRING"}}, "required": ["summary"]}
     generation_config = {"response_mime_type": "application/json", "response_schema": json_schema}
 
@@ -97,37 +98,55 @@ async def generate_docs(e):
         async def fetch_descriptions():
             descriptions = []
             successful_api_call = False
-            for tab in tabs:
+            # Filter for only the selected tabs
+            checkboxes = document.querySelectorAll("#tab-list input[type='checkbox']")
+            selected_tab_ids = {int(cb.value) for cb in checkboxes if cb.checked}
+            selected_tabs = [tab for tab in tabs if tab.id in selected_tab_ids]
+
+
+            for tab in selected_tabs:
                 try:
-                    prompt = f"Provide a one-sentence summary of the webpage at this URL: {tab.url}"
-                    tools = [{"urlContext": {}}]
-                    model = "gemini-1.5-flash"
+                    # MODIFIED: The prompt is changed to manage expectations, as the model only sees the title and URL.
+                    # For a true summary, you would need to extract and send the page's text content.
+                    prompt = f"Based on the following title and URL, write a short, one-sentence predicted summary of the webpage.\nTitle: {tab.title}\nURL: {tab.url}"
+                    
+                    # CORRECTED: Use a valid model name.
+                    model = "gemini-1.5-flash-latest" 
                     
                     response = await pyfetch(
-                        url=f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}",
+                        url=f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}", # Using v1beta is often better for newer features
                         method="POST",
                         headers={"Content-Type": "application/json"},
                         body=json.dumps({
                             "contents": [{"parts": [{"text": prompt}]}],
-                            "tools": tools,
+                            # REMOVED: The 'tools' parameter was incorrect and not functional here.
                             "generationConfig": generation_config
                         })
                     )
                     data = await response.json()
 
-                    if response.status != 200 or 'error' in data:
-                        error_message = data.get('error', {}).get('message', f'HTTP {response.status}')
+                    if response.status != 200 or 'candidates' not in data:
+                        error_message = data.get('error', {}).get('message', f'HTTP {response.status} - No valid response from API.')
                         descriptions.append(f"{tab.title}: Error - {error_message}")
-                        await remove_storage_data('gemini_api_key')
-                        show_api_key_input()
-                        document.getElementById("docs-output").value = f"API Key failed. Please enter a new key.\nError: {error_message}"
-                        return
+                        
+                        # Only invalidate the API key on specific authentication errors
+                        if response.status in [401, 403]:
+                            await remove_storage_data('gemini_api_key')
+                            show_api_key_input()
+                            document.getElementById("docs-output").value = f"API Key failed. Please enter a new key.\nError: {error_message}"
+                            return
+                        continue # Continue to the next tab if it's a non-fatal error
                     
                     successful_api_call = True
-                    generated_content = data['candidates'][0]['content']['parts'][0]['text']
-                    response_json = json.loads(generated_content)
-                    summary = response_json.get("summary", "No summary found.")
-                    descriptions.append(f"{tab.title}: {summary.strip()}")
+                    # It's safer to check the structure of the response before accessing it
+                    if 'candidates' in data and data['candidates'][0]['content']['parts'][0]['text']:
+                        generated_content = data['candidates'][0]['content']['parts'][0]['text']
+                        response_json = json.loads(generated_content)
+                        summary = response_json.get("summary", "No summary found.")
+                        descriptions.append(f"{tab.title}: {summary.strip()}")
+                    else:
+                        descriptions.append(f"{tab.title}: Error - Received an empty response from the API.")
+
 
                 except Exception as err:
                     descriptions.append(f"{tab.title}: Error - {str(err)}")
@@ -141,7 +160,8 @@ async def generate_docs(e):
 
         asyncio.ensure_future(fetch_descriptions())
 
-    chrome.tabs.query({}, create_proxy(get_tabs_for_docs))
+    # Get only the current window's tabs to avoid unnecessary processing
+    chrome.tabs.query({"currentWindow": True}, create_proxy(get_tabs_for_docs))
 
 
 # --- Event Listeners ---
