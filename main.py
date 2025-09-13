@@ -64,11 +64,11 @@ async def generate_docs(e):
             descriptions = []
             for tab in tabs:
                 try:
-                    # The prompt is a general instruction, and the URL is provided in the tool.
                     prompt = "Provide a one-sentence summary of the provided web page."
                     
+                    # Corrected tool name to `googleSearchRetrieval` for the v1 API
                     tools = [{
-                        "google_search_retriever": {
+                        "googleSearchRetrieval": {
                             "uris": [tab.url]
                         }
                     }]
