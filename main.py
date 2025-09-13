@@ -70,8 +70,10 @@ async def generate_docs(e):
             for tab in tabs:
                 try:
                     prompt = f"What is the main purpose of the website at this URL: {tab.url}? Provide a one-sentence summary."
+                    # Corrected the API endpoint and model
+                    model = "gemini-1.5-flash-latest"
                     response = await pyfetch(
-                        url=f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}",
+                        url=f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}",
                         method="POST",
                         headers={"Content-Type": "application/json"},
                         body=json.dumps({
@@ -83,12 +85,18 @@ async def generate_docs(e):
                         })
                     )
                     data = await response.json()
+                    # Check for errors in the response
+                    if 'error' in data:
+                        error_message = data['error'].get('message', 'Unknown error')
+                        descriptions.append(f"{tab.title}: Error - {error_message}")
+                        continue
+                    
                     generated_text = data['candidates'][0]['content']['parts'][0]['text']
                     descriptions.append(f"{tab.title}: {generated_text.strip()}")
                 except Exception as e:
                     descriptions.append(f"{tab.title}: Error generating description - {e}")
             
-            document.getElementById("docs-output").value = "\n".join(descriptions)
+            document.getElementById("docs-output").value = "\n\n".join(descriptions)
 
         asyncio.ensure_future(fetch_descriptions())
 
