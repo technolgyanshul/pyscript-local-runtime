@@ -1,16 +1,48 @@
 
+/* Define color palettes using CSS variables */
+:root {
+    --background-color: #f4f4f4;
+    --text-color: #333;
+    --header-bg: #333;
+    --header-text: #fff;
+    --section-bg: #fff;
+    --section-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    --primary-color: #007BFF;
+    --primary-text: #fff;
+    --footer-text: #666;
+    --feature-h3-color: #007BFF;
+    --button-bg: #007BFF;
+    --button-text: #fff;
+}
+
+[data-theme="dark"] {
+    --background-color: #121212;
+    --text-color: #e0e0e0;
+    --header-bg: #1f1f1f;
+    --header-text: #e0e0e0;
+    --section-bg: #1e1e1e;
+    --section-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    --primary-color: #0d8eff;
+    --primary-text: #fff;
+    --footer-text: #a0a0a0;
+    --feature-h3-color: #4dabf7;
+    --button-bg: #0d8eff;
+    --button-text: #fff;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.6;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
-    color: #333;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
 }
 
 header {
-    background-color: #333;
-    color: #fff;
+    background-color: var(--header-bg);
+    color: var(--header-text);
     text-align: center;
     padding: 1rem 0;
 }
@@ -27,29 +59,57 @@ main {
 }
 
 section {
-    background-color: #fff;
+    background-color: var(--section-bg);
     margin-bottom: 20px;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: var(--section-shadow);
 }
 
 #hero h2 {
-    color: #333;
+    color: var(--text-color);
 }
 
 .feature h3 {
-    color: #007BFF;
+    color: var(--feature-h3-color);
 }
 
 #how-to-use ol {
     padding-left: 20px;
 }
 
-#cta {
-    background-color: #007BFF;
-    color: #fff;
+#cta, #download {
+    background-color: var(--primary-color);
+    color: var(--primary-text);
     text-align: center;
+}
+
+/* Specific override for text color in CTA/Download sections in light mode */
+:root #cta p,
+:root #download p {
+    color: #fff;
+}
+
+/* General text color for CTA/Download in dark mode */
+[data-theme="dark"] #cta p,
+[data-theme="dark"] #download p {
+    color: var(--primary-text);
+}
+
+
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-top: 10px;
+    border-radius: 5px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.button:hover {
+    opacity: 0.9;
 }
 
 footer {
@@ -57,5 +117,5 @@ footer {
     padding: 20px;
     margin-top: 20px;
     font-size: 0.9em;
-    color: #666;
+    color: var(--footer-text);
 }
