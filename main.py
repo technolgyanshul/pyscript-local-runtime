@@ -1,6 +1,8 @@
 
 import json
+import asyncio
 from pyodide.ffi import create_proxy
+from pyodide.http import pyfetch
 from js import chrome, document
 
 def display_tabs(tabs):
@@ -54,5 +56,45 @@ def export_selected_tabs(e):
 
     chrome.tabs.query({}, create_proxy(get_tabs_for_export))
 
+async def generate_docs(e):
+    api_key = document.getElementById("gemini-api-key").value
+    if not api_key:
+        document.getElementById("docs-output").value = "Please enter your Gemini API key."
+        return
+
+    document.getElementById("docs-output").value = "Generating descriptions..."
+
+    def get_tabs_for_docs(tabs):
+        async def fetch_descriptions():
+            descriptions = []
+            for tab in tabs:
+                try:
+                    prompt = f"What is the main purpose of the website at this URL: {tab.url}? Provide a one-sentence summary."
+                    response = await pyfetch(
+                        url=f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}",
+                        method="POST",
+                        headers={"Content-Type": "application/json"},
+                        body=json.dumps({
+                            "contents": [{
+                                "parts": [{
+                                    "text": prompt
+                                }]
+                            }]
+                        })
+                    )
+                    data = await response.json()
+                    generated_text = data['candidates'][0]['content']['parts'][0]['text']
+                    descriptions.append(f"{tab.title}: {generated_text.strip()}")
+                except Exception as e:
+                    descriptions.append(f"{tab.title}: Error generating description - {e}")
+            
+            document.getElementById("docs-output").value = "\n".join(descriptions)
+
+        asyncio.ensure_future(fetch_descriptions())
+
+    chrome.tabs.query({}, create_proxy(get_tabs_for_docs))
+
+
 chrome.tabs.query({}, create_proxy(display_tabs))
 document.getElementById("export-btn").addEventListener("click", create_proxy(export_selected_tabs))
+document.getElementById("generate-docs-btn").addEventListener("click", create_proxy(generate_docs))

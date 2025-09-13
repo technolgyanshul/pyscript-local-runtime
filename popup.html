@@ -23,6 +23,15 @@
         <label for="json-output">Copy your JSON from here:</label>
         <textarea id="json-output" readonly></textarea>
     </div>
+    <hr>
+    <h2>Generate Website Descriptions</h2>
+    <div id="gemini-container">
+        <label for="gemini-api-key">Enter your Gemini API Key:</label>
+        <input type="text" id="gemini-api-key" placeholder="Your API Key">
+        <button id="generate-docs-btn">Generate Descriptions</button>
+        <label for="docs-output">Generated Descriptions:</label>
+        <textarea id="docs-output" readonly></textarea>
+    </div>
     <py-script src="main.py"></py-script>
   </body>
 </html>

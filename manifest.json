@@ -1,6 +1,6 @@
 {
-  "name": "PyScript Demo 1",
-  "description": "Build Chrome Extensions in Python/PyScript",
+  "name": "AI Tab Scribe",
+  "description": "A Chrome extension that uses the Gemini API to automatically generate one-sentence summaries for your open browser tabs. It also allows you to export tab information as a JSON file.",
   "version": "1.0",
   "manifest_version": 3,
   "icons": {
